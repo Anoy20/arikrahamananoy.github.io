@@ -1,57 +1,59 @@
-$(document).ready(function(e){
-    $win = $(window);
-    $navbar = $('#header');
-    $toggle = $('.toggle-button');
-    var width = $navbar.width();
-    toggle_onclick($win, $navbar, width);
+var TxtType = function(el, toRotate, period) {
+    this.toRotate = toRotate;
+    this.el = el;
+    this.loopNum = 0;
+    this.period = parseInt(period, 10) || 2000;
+    this.txt = '';
+    this.tick();
+    this.isDeleting = false;
+};
 
-    // resize event
-    $win.resize(function(){
-        toggle_onclick($win, $navbar, width);
-    });
+TxtType.prototype.tick = function() {
+    var i = this.loopNum % this.toRotate.length;
+    var fullTxt = this.toRotate[i];
 
-    $toggle.click(function(e){
-        $navbar.toggleClass("toggle-left");
-    })
-
-});
-
-function toggle_onclick($win, $navbar, width){
-    if($win.width() <= 768){
-        $navbar.css({left: `-${width}px`});
-    }else{
-        $navbar.css({left: '0px'});
+    if (this.isDeleting) {
+    this.txt = fullTxt.substring(0, this.txt.length - 1);
+    } else {
+    this.txt = fullTxt.substring(0, this.txt.length + 1);
     }
-}
 
-var typed = new Typed('#typed' , {
-    strings: [
-        'Web Developer',
-        'Freelancer',
-        'Web Designer'
-    ],
-    typeSpeed: 50,
-    backSpeed: 50,
-    loop: true
-});
+    this.el.innerHTML = '<span class="wrap">'+this.txt+'</span>';
 
-var typed_2 = new Typed('#typed_2' , {
-    strings: [
-        'Web Developer',
-        'Web Designer',
-        'Professional Freelancer'
-    ],
-    typeSpeed: 50,
-    backSpeed: 50,
-    loop: true
-});
+    var that = this;
+    var delta = 200 - Math.random() * 100;
 
-document.querySelectorAll('a[href^="#"]').forEach(anchor =>{
-    anchor.addEventListener('click', function(e){
-        e.preventDefault();
+    if (this.isDeleting) { delta /= 2; }
 
-        document.querySelector(this.getAttribute('href')).scrollIntoView({
-            behavior: 'smooth'
-        });
-    });
-});
+    if (!this.isDeleting && this.txt === fullTxt) {
+    delta = this.period;
+    this.isDeleting = true;
+    } else if (this.isDeleting && this.txt === '') {
+    this.isDeleting = false;
+    this.loopNum++;
+    delta = 500;
+    }
+
+    setTimeout(function() {
+    that.tick();
+    }, delta);
+};
+
+window.onload = function() {
+    var elements = document.getElementsByClassName('typewrite');
+    for (var i=0; i<elements.length; i++) {
+        var toRotate = elements[i].getAttribute('data-type');
+        var period = elements[i].getAttribute('data-period');
+        if (toRotate) {
+          new TxtType(elements[i], JSON.parse(toRotate), period);
+        }
+    }
+    // INJECT CSS
+    var css = document.createElement("style");
+    css.type = "text/css";
+    css.innerHTML = ".typewrite > .wrap { border-right: 0.08em solid #fff}";
+    document.body.appendChild(css);
+};
+
+
+Resources
